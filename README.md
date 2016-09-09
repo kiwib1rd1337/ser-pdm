@@ -1,32 +1,32 @@
 # ser-pdm
-             ________________
-            |  _         _   |
-            | |_  |_| |  /   |
-            |  _| | | | /_   |
-            |  _   _         |
-            | |_/ |_|  *  __ |
-            | |_\ | \ *  |/| |
-            |            |_| |
-            |________________| inc.
+	     ________________
+	    |  _         _   |
+	    | |_  |_| |  /   |
+	    |  _| | | | /_   |
+	    |  _   _         |
+	    | |_/ |_|  *  __ |
+	    | |_\ | \ *  |/| |
+	    |            |_| |
+	    |________________| inc.
 
-        A non-existant corporation
+	A non-existant corporation
 
   Taking the NEW, out of ZEALAND, since 2016!
-                   (*_*)
-                    \|/
-   ======================================
-  |   _   __  __        __   _           |
-  |  / \ |   |  |      |  | | \  |\  /|  |
-  |  \_  |__ |__|  __  |__| |  | | \/ |  |
-  |    \ |   | \       |    |  | |    |  |
-  |  __/ |__ |  \      |    |_/  |    |  |
-  |                                      |
-  |  (Copyleft) 666 Rabid Discord & Co.  |
-  |      A division of SH1ZBR0 Inc.      |
-  |                                      |
-  |    -----NO PONIES ALLOWED!!!!-----   |
-  |                                      |
-   ======================================
+	                 (*_*)
+	                  \|/
+	 ======================================
+	|   _   __  __        __   _           |
+	|  / \ |   |  |      |  | | \  |\  /|  |
+	|  \_  |__ |__|  __  |__| |  | | \/ |  |
+	|    \ |   | \       |    |  | |    |  |
+	|  __/ |__ |  \      |    |_/  |    |  |
+	|                                      |
+	|  (Copyleft) 666 Rabid Discord & Co.  |
+	|      A division of SH1ZBR0 Inc.      |
+	|                                      |
+	|    -----NO PONIES ALLOWED!!!!-----   |
+	|                                      |
+	 ======================================
 
 This python script plays an audio stream over the serial port.
 Audio stream must be s8, u8, s16be, s16le, u16be, or u16le
