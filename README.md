@@ -37,11 +37,13 @@ UART, RS232, FTDI, GPIO, ARDUINO, etc.. Anything with a serial output!
 EXAMPLES:
 
 ffmpeg / avconv:
-	ffmpeg -i <miscellaneous-sound-file> -f s8 -acodec pcm_s8 -ar 22400 -ac 1 - | ./usbsersnd.py <serialport> 230400 s8
 
+	ffmpeg -i <miscellaneous-sound-file> -f s8 -acodec pcm_s8 -ar 22400 -ac 1 - | ./usbsersnd.py <serialport> 230400 s8
+	
 	avconv -i <miscellaneous-sound-file> -f s8 -acodec pcm_s8 -ar 22400 -ac 1 - | ./usbsersnd.py <serialport> 230400 s8
 
 VLC:
+
 	vlc <music file(s)/folder) --sout \"#transcode{acodec=s16le,,channels=1,samplerate=22400,afilter=compressor}:standard{access=file,mux=raw,dst=-}\" | ./$
 
 Many other things are possible with this program, including ALSA, Pulseaudio, and Jack tunneling through STDIN (good luck with that ;D )
