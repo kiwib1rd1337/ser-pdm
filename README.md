@@ -10,8 +10,8 @@
 	    |________________| inc.
 
 	A non-existant corporation
-
-  Taking the NEW, out of ZEALAND, since 2016!
+	
+	Taking the NEW, out of ZEALAND, since 2016!
 	                 (*_*)
 	                  \|/
 	 ======================================
