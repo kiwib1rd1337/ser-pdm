@@ -58,22 +58,23 @@ then enter the directory using:
 
 	cd ser-pdm
 
-	You may now run the script by rnning: ./serpdm.py --help
+You may now run the script by rnning: ./serpdm.py --help
 
 OPTIONAL: to cythonize and compile ser-pdm, run:
 
 	./cythonize.sh
 
-		This should generate a native compiled executable using cython and gcc. The resulting executable should be faster than the python interpreter version.
-	
-		The cythonize script has NO error detection, so you have to check if it did it's job or not.
-		Now test it by running "./serpdm". If it works, it's all good. If it doesn't, then something went wrong (you might not have cython or python-dev installed). You may skip if this is the case.
+This should generate a native compiled executable using cython and gcc. The resulting executable should be faster than the python interpreter version.
+
+The cythonize script has NO error detection, so you have to check if it did it's job or not.
+Now test it by running "./serpdm". If it works, it's all good. If it doesn't, then something went wrong (you might not have cython or python-dev installed). You may skip if this is the case.
+
 
 To install the program, run:
 
 	sudo ./install.sh
 	
-		This is a very basic installation script, so you may get a few errors. It should still work regardless. If it doesn't, then there may be an issue with /usr/local/bin on your system, and you may have to install ser-pdm manually by CP-ing and CHMOD-ing the serpdm.py script and/or the compiled serpdm executable
+This is a very basic installation script, so you may get a few errors. It should still work regardless. If it doesn't, then there may be an issue with /usr/local/bin on your system, and you may have to install ser-pdm manually by CP-ing and CHMOD-ing the serpdm.py script and/or the compiled serpdm executable
 
 To uninstall ser-pcm, run:
 	
