@@ -15,6 +15,10 @@ rm /usr/local/bin/serpdm > /dev/null
 cp ./serpdm.py /usr/local/bin/ > /dev/null
 cp ./serpdm /usr/local/bin/ > /dev/null
 
+chmod 755 /usr/local/bin/serpdm.py > /dev/null
+chmod 755 /usr/local/bin/serpdm > /dev/null
+
+
 chmod +x /usr/local/bin/serpdm.py > /dev/null
 chmod +x /usr/local/bin/serpdm > /dev/null
 
