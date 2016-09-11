@@ -78,6 +78,6 @@ This is a very basic installation script, so you may get a few errors. It should
 
 To uninstall ser-pcm, run:
 	
-	sudo ./uninstall.sh\
+	sudo ./uninstall.sh
 
 Like the install and cython scripts, this script is also very basic, and has no error detection.
