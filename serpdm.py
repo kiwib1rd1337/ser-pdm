@@ -39,7 +39,7 @@
 # This file may be used and abused by anyone who get's hold of it, within the terms of the I_DONT_GIVE_A_FUCK_UNLESS_YOU_PROFIT_OFF_OF_MY_WORK public lic...
 # Oh wait, that license doesn't exist. Oh well, just consider this program licensed under the GNU GPLv3 instead (I don't want closed source idiots bastardising my code, do I?).
 
-# Copyreich bullshit:
+# Copyreich bullschitte:
 
 ###################################################################################
 #                                                                                 #
@@ -64,8 +64,8 @@
 
 # Oops, I think I doxxed myself.
 #
-# Now, I'd appreciate that if in the case that  you do fork or edit this program, that you kept all (or most) of the comments, easter-eggs, and all out whittyness of my work, but feel free to add to it in a similar style of mine. This is optional, of course ^v^ 
-# I'd also appreciate if you kept all modified deriatives of this program as free and open source software (unless you negotiate with me personally about some seperate agreement. Who knows, I may be generous, like Rarity ;p #)
+# Now, I'd appreciate that if in the case that you do fork or edit this program, that you kept all (or most) of the comments, easter-eggs, and all out whittyness of my work, but feel free to add to it in a similar style of mine. This is optional, of course ^v^ 
+# I'd also appreciate if you kept all modified deriatives of this program as free and open source software (unless you negotiate with me personally about some alternative agreement. Who knows, I may be generous, like Rarity ;P #)
 #
 # That being said, let's begin!!!
 #
@@ -93,12 +93,12 @@ def startplayin(port, baud, bits, signed, endian): # start playin' the stream to
 	startbits = 1 # startbits (serial protocol optimization). This is always 1. DO NOT CHANGE
 	stopbits = 1 # stop bots (serial protocol optimixation). Configurable: may be 1 or 2.
 	ser.stopbits = stopbits
- 
+	
 	ser.xonxoff = 0 # not needed
 	bytesize = 8 # data bits (seial port protocol). This may be 5,6,7,8, BUT NOT 9!
 	ser.bytesize = bytesize
 	ser.open()
-
+	
 	if os.name == 'posix': # last ditch attempt to enforce non-blocking IO on the serial port. This is exclusive to POSIX and POSIX-like systems (i.e. Linux)
 		ser.nonblocking()
 	else:
@@ -106,11 +106,9 @@ def startplayin(port, baud, bits, signed, endian): # start playin' the stream to
 		print("You are running this on a non-posix system. It is YOUR responsibility to make sure the serial port isn't buffering anything. (Buffering may cause unnecessary latency on lossy serial ports)")
 	
 	buffer_ms=100 # set buffer to 100ms
-
-	buffer=(int(baud))/(1000/buffer_ms) # define the buffer size from 100/buffer_ms of the baud rate, per second (i.e. 1000/100=10 for 100ms latency)
 	
-
-
+	buffer=int(baud)/1000*buffer_ms # define the buffer size from 100/buffer_ms of the baud rate, per second (i.e. 1000/100=10 for 100ms latency)
+	
 	# This is where the shit starts getting real! Celestia, please don't let it hit the fan.
 	
 	nativeendian = sys.byteorder # What endianness am I? (usually it is little-endian, but I just want to make sure this isn't running inside an illegal alien of a microprocessor (like old SuperH processors, bi-endian processors running big endian operating systems (like PowerPC, ARM, MIPS, SH4, Etc...), the AVR32, or a Motorola 68000 series processor.)  
@@ -119,11 +117,7 @@ def startplayin(port, baud, bits, signed, endian): # start playin' the stream to
 	
 	error = 0 # (error for the pdm modulator)
 	
-	data = ""
-	optsamplerate = int(baud)
-	
-	new_array = array.array
-	read_stdin = sys.stdin.read
+	optsamplerate = int(baud) # The sample rate should match the baud rate
 	
 	cal_time = time.time(); # Use time function to autocalibrate for start and stop bits.
 	cal_bits_orig = bytesize + startbits + stopbits # define default for autocalibrate.
@@ -138,7 +132,7 @@ def startplayin(port, baud, bits, signed, endian): # start playin' the stream to
 			arrayconf = "b"
 		else:
 			arrayconf = "B"
-	if bits == 16:
+	elif bits == 16: # optimize by using elif instead of if
 		if signed == 1:
 			arrayconf = "h"
 		else:
@@ -148,20 +142,20 @@ def startplayin(port, baud, bits, signed, endian): # start playin' the stream to
 	count = 0
 	bstr = ""
 	val = 0
-
+	data = ""
 	
 	Byteswap = True if nativeendian != endian else False # Is our endianness native? 
 	
 	range = math.pow(256,bits / bytesize)  # calculate integer range from bit value (for some reason, python code doesn't seem to tolerate exponents. I got stuck here for a while, wondering why my perfect code continued to play EAR RAPE through my serial port!)
 	signedadd = signed * range / 2 # Calculate offset for signed integers
-
+	
 	bufmultiplier = bits / 8 # compensate for 16 bit buffer by adjusting size accordingly
 	
 	ser.write("U"*buffer); # Stream a simple benchmark buffer to the serial port (U translates to '01010101', so that should minimize noise with the start bit being 1 and endbit being 0.
 	while True: # Our main loop.
 		
 		readin = sys.stdin.read(buffer * bufmultiplier) # Read the buffer from STDIN (double buffer in case of 16 bit. We want the 16 bit values)		
-				
+		
 		# create byte array in correct format
 		buf = array.array(arrayconf, readin)
 		
@@ -170,12 +164,8 @@ def startplayin(port, baud, bits, signed, endian): # start playin' the stream to
 		
 		if len(buf) == 0: # break if we dont have an array
 			break
-		
-		# define our data variable
-		data = ""
-		
-				
-		# Start for looping for each value in the buffer
+						
+		# Start for-looping each value in the buffer
 		for c in buf:
 			error += c+signedadd # Add buffer value to error (and add signed offset if needed) to prepare for the modulator function
 			
@@ -186,9 +176,9 @@ def startplayin(port, baud, bits, signed, endian): # start playin' the stream to
 				val = 0
 			
 			# Now that we've modulated our bit, we can add it to the byte (or skip it if it's a calibration bit)
-
+			
 			if count < bytesize: # add the bit to string, if within bytesize range (otherwise, it's a calibration bit, so skip it)
-				bstr += ("0"*(1-int(val))+"1"*int(val)) # add 1 if VAL = 1, or 0 if VAL = 0
+				bstr += str(val)
 			
 			count += 1 #we just calculated/skipped another bit!
 			
@@ -200,10 +190,12 @@ def startplayin(port, baud, bits, signed, endian): # start playin' the stream to
 		ser.flush() # FLUSH WHAT'S LEFT OF THE GOD DAMNED BUFFER ALREADY! IT'S PISSING ME OFF WHILE I AM PROGRAMMING THIS WORKAROUND AT 4:30 IN THE GOD DAMN MORNING!
 		ser.write(data) # Send the 1024 bytes to the serial port
 		
+		data = "" # clear data variable
+		
 		timepassed = (time.time() - cal_time) * 1000
 		cal_float_raw = timepassed / buffer_ms * cal_bits_orig   # Calculate a rough estimate of an optimal calibration setting. time-elapsed / buffer-time * original_cal_bits_estimate
 		
-		if cal_float_raw < cal_float * 16: # to combat erraneous buffering
+		if cal_float_raw < cal_float * 16: # to combat erraneous buffering (i.e. paused stream)
 			cal_float = (cal_float_raw + (cal_float * 99))/100 # even out the estimate by using a simple averaging equation,
 			cal_bits = int(cal_float) # round the averaged float down to an int, so we can get a standalone bit value to use for the next buffered input.
 		
@@ -218,7 +210,8 @@ def startplayin(port, baud, bits, signed, endian): # start playin' the stream to
 			print("SER-PDM: Twilight Sparkle's Autocalibrate: Ignoring unusually large delay.") # There she goes, ponies editing my code again... -_-
 		
 		cal_time = time.time() # Reset the calibration timer.
-	# Cheese, I amme a13373 Phr4cQu3r, aren't I?	
+	
+	# Cheese, I amme a13373 Phr4cQu3r, aren't I?
 
 def molasses(): # For the enevitable case when our hardware or software is too slow, and can't keep up.
 	sys.stderr.write('ERROR: Cannot keep up with baud rate. Halting now!')
@@ -262,7 +255,7 @@ def help(): # Just in case we have yet another 'Nice Trucker', '9/11', 'Boston B
 This program is licensed under the GNU GPL version 3. You should've gotten a copy of it when you downloaded this software (the 'COPYING' file). Otherwise, see <http://www.gnu.org/licenses/> for details.
 
 Info:
-  This application takes raw pcm_s8 audio from STDIN, and plays it through a serial port.
+  This application takes raw pcm audio from STDIN, and plays it through a serial port.
   Just hook up your speaker wires to TX and GND pins of the serial port!
 
 This is Version 2. This one uses DELTA-SIGMA PDM, instead of crappy old PWM!
@@ -275,13 +268,14 @@ Use a bitrate of about a 10th of the baud rate.
 
 EXAMPLES:
 
- ffmpeg:
+ ffmpeg (or avconv):
    ffmpeg -i <miscellaneous-sound-file> -f s8 -acodec pcm_s8 -ar 22400 -ac 1 - | ./usbsersnd.py <serialport> 230400 s8
 
  VLC:
    vlc <music file(s)/folder) --sout \"#transcode{acodec=s16le,,channels=1,samplerate=22400,afilter=compressor}:standard{access=file,mux=raw,dst=-}\" | ./usbsersnd.py <serialport> 230400 s16le
 
 Many other things are possible with this program, including ALSA, Pulseaudio, and Jack tunneling through STDIN (good luck with that ;D )
+FIFO tunneling is also possible!
 
 This program will automatically print the calculated optimum sample frequency, in case you need to optimize it for your particular serial port device (and baud rate)
 
@@ -393,7 +387,6 @@ if len(sys.argv) >= 4 and sys.argv[1] == "--debug": # Run this program in debug 
 
 if len(sys.argv) == 2 and sys.argv[1] == base64.b64decode("LS1TSDFaQlIw"): # SSHHHH!!! IT'S A S3cReT!!!!! 
 	print(base64.b64decode("IF9fX19fX19fX19fX19fX18NCnwgIF8gICAgICAgICBfICAgfA0KfCB8XyAgfF98IHwgIC8gICB8DQp8ICBffCB8IHwgfCAvXyAgIHwNCnwgIF8gICBfICAgICAgX18gfA0KfCB8Xy8gfF98ICAqIHwvfCB8DQp8IHxfXCB8IFwgKiAgfF98IHwNCnxfX19fX19fX19fX19fX19ffA0KDQpJZiB5b3UncmUgcmVhZGluZyB0aGlzLCB0aGVuIENPTkdSQURVTEFUSU9OUyEgWW91IGhhdmUgd29uIGEgZnJlZSB0aWNrZXQgdG8gRXF1ZXN0cmlhISBBbGwgeW91IG5lZWQgdG8gZG8gdG8gcmVjZWl2ZSBpdCBpcyB0byBwZXJmb3JtIHRoZSBmb2xsb3dpbmcgcml0dWFsLCBzdGVwIGJ5IHN0ZXA6DQoNCiogR28gdG8geW91J3JlIGxvY2FsIGNvbnZlbmllbmNlIHN0b3JlLCBhbmQgYnV5OiBzb21lIGJsZWFjaCwgYSBwaWVjZSBvZiBNTFAgbWVyY2hhbmRpc2UsIHNvbWUgRG9yaXRvcywgYSBib3R0bGUgb2YgTW91bnRhaW4gRGV3IGFuZCBhcyBtdWNoIGFsY29ob2wgdG8gZ2V0IHlvdSBkcnVuay4NCitUaGUgYWxjb2hvbCBtYXkgYmUgYW55dGhpbmcgZnJvbSB2b2RrYSB0byBjb29raW5nIHdpbmUgb3IgbWV0aHlsYXRlZCBzcGlyaXRzLiBUaGUgbW9yZSBwb3RlbnQgdGhlIGFsY29ob2wsIHRoZSBiZXR0ZXIuIEdhc29saW5lIG9yIHBldHJvbCB3aWxsIGFsc28gd29yaywgc28geW91IG1heSB3YW50IHRvIGNhcnJ5IGFuIG9sZCBqZXJyeSBjYW4gZnVsbCBvZiB0aGUgc3R1ZmYuDQoqIGdvIHRvIHlvbydyZSBuZWFyZXN0IHJhaWx3YXkuIE1ha2Ugc3VyZSB0aGF0IGl0IGlzIHN0aWxsIGJlaW5nIHVzZWQuIEFiYW5kb25lZCBvciBkaXNjb250aW51ZWQgcmFpbHdheXMgd2lsbCBub3Qgd29yay4NCiogUHV0IHlvdXIgTUxQIG1lcmNoYW5kaXNlIG9uIHRoZSByYWlsd2F5IHRyYWNrDQoqIFdhbGsgMTAgbWV0ZXJzIGRvd24gdGhlIHJhaWx3YXkgdHJhY2ssIGFuZCBwbGFjZSB5b3VyIERvcml0b3MgYW5kIE1vdW50YWluIERldyBvbnRvIHRoZSByYWlsd2F5IHRyYWNrDQoqIFdhbGsgNSBtZXRlcnMgdG93YXJkcyB3aGVyZSB5b3UgcGxhY2VkIGRvd24geW91ciBNTFAgbWVyY2gNCiogU2l0IG9uIHRoZSByYWlsd2F5IHRyYWNrDQoqIERyaW5rIGFsbCBvZiB5b3VyIGFsY29ob2wgYW5kIG90aGVyIGludG94aWNhbnRzLiBZb3UgbWF5IHRha2UgeW91ciB0aW1lIGlmIHlvdSBjYW4ndCBoYW5kbGUgYWxsIHRoYXQgc3R1ZmYuIERPIE5PVCBMRUFWRSBUSEFUIFNQT1QhIElmIHlvdSBuZWVkIHRvIHVyaW5hdGUgb3IgZGVmYWNhdGUsIHlvdSBtYXkgc3RhbmQgdXAgb3Igc3F1YXQsIGFuZCBkbyB5b3VyIGJ1c2luZXNzIHdpdGhpbiBhIDUgbWV0ZXJzLiBETyBOT1QgTU9WRSBCRVlPTkQgVEhFIFJBSUxTLiBTVEFZIEJFVFdFRU4gVEhFIFJBSUxTIEFUIEFMTCBUSU1FUyENCiogV2FpdCB1cCB0byAyNCBob3VycyBmb3IgeW91ciB0cmFpbiB0byBhcnJpdmUuIFlvdSBtYXkgcGFzcyBvdXQgaWYgeW91IHdpc2guIFRoZSB0cmFpbiB3aWxsIHdha2UgeW91IHVwLiBJZiB0aGF0IGRvZXNuJ3Qgd2FrZSB5b3UsIHRoZSBjcmV3IG9uIHRoZSB0cmFpbiB3aWxsIGNhcnJ5IHlvdSBpbi4NCiogQW5kIGFub3RoZXIgdHdvIGhvdXJzIG9uIHRoZSB0cmFpbiwgYW5kIHlvdSB3aWxsIGFycml2ZSBpbiBFcXVlc3RyaWEuIEhBVkUgRlVOIQ0KDQpJZiB5b3UgUkVBTExZIHRoaW5rIGknbSBzZXJpb3VzIGFib3V0IHRoZSBhYm92ZSwgdGhlbiBpdCdzIHByb2JhYmx5IHRoZSBiZXN0IGludGVyZXN0IG9mIHNvY2lldHkgZm9yIHlvdSB0byBwcm9jZWVkIHdpdGggZG9pbmcgdGhlIGFib3ZlLg0KQ29uc2lkZXIgdGhpcyBhIHN0dXBpZGl0eSB0ZXN0LiBOb3QgZXZlbiB0aGUgbW9zdCBoYXJkY29yZSBicm9uaWVzIGluIGV4aXN0YW5jZSB3b3VsZCBldmVyIHRha2UgdGhhdCB0ZXh0IHNlcmlvdXNseS4NCg0KRm9yIG1vcmUgaW5mb3JtYXRpb24gYWJvdXQgd2h5IHRoYXQgaXNuJ3Qgc3VjaCBhIGdvb2QgaWRlYSwgcGxlYXNlIHdhdGNoIHRoaXMgdmlkZW86DQpodHRwczovL3lvdXR1LmJlL0lKTlIyRXBTMGp3DQoNCkkgbWVhbiBzZXJpb3VzbHkuIElmIHlvdSBkb24ndCB3YW4ndCB0byBiZSBydW4gb3ZlciBieSBhIFRob21hcyB0aGUgVGFuayBFbmdpbmUsIERPTidUIExJRSBPTiBUSEUgRkFSS0lOJyBSQUlMV0FZIFRSQUNLUyEhIQ0K")) # 34573R 3665 4 7|-|3 \/\/1|\|!!!
-
 
 try:
 	if len(sys.argv) <= 2 and sys.argv[1] != base64.b64decode("LS1TSDFaQlIw") or len(sys.argv) > 5: #we need to send an SOS. This ship is sinking! Canterlot is under attack! We can't figure out what you mean by those arguments!
