@@ -36,7 +36,7 @@ UART, RS232, FTDI, GPIO, ARDUINO, etc.. Anything with a serial output!
 
 As featured here:
 
-[![Alt text for your video](http://img.youtube.com/vi/KRkUUQOG20/0.jpg)](http://www.youtube.com/watch?v=KRkUUQOG20)
+[![SER-PDM Demo Video](http://img.youtube.com/vi/LKRkUUQOG20/0.jpg)](https://www.youtube.com/watch?v=LKRkUUQOG20)
 
 EXAMPLES:
 
