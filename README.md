@@ -36,7 +36,7 @@ UART, RS232, FTDI, GPIO, ARDUINO, etc.. Anything with a serial output!
 
 As featured here:
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/LKRkUUQOG20" frameborder="0" allowfullscreen></iframe>
+[![Alt text for your video](http://img.youtube.com/vi/KRkUUQOG20/0.jpg)](http://www.youtube.com/watch?v=KRkUUQOG20)
 
 EXAMPLES:
 
