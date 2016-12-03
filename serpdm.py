@@ -105,7 +105,7 @@ def startplayin(port, baud, bits, signed, endian): # start playin' the stream to
 		# FRACK THIS SHIP!
 		print("You are running this on a non-posix system. It is YOUR responsibility to make sure the serial port isn't buffering anything. (Buffering may cause unnecessary latency on lossy serial ports)")
 	
-	buffer_ms=100 # set buffer to 100ms
+	buffer_ms=100 # set buffer to 10ms
 	
 	buffer=int(baud)/1000*buffer_ms # define the buffer size from 100/buffer_ms of the baud rate, per second (i.e. 1000/100=10 for 100ms latency)
 	
@@ -125,6 +125,9 @@ def startplayin(port, baud, bits, signed, endian): # start playin' the stream to
 	old_cal_bits = 0
 	cal_float = float(cal_bits)
 	readin = ''
+	
+	cal_wait_time=0 # These variables are used in order to log instances of implementing delays to combat lossy serial ports
+	old_cal_wait_time=cal_wait_time
 	
 	arrayconf = ''
 	if bits == 8: # create byte array configuration for correct format (I dragged it down here, so it doesn't continuously run these if - else rules every time the buffer resets, thereby optimising the code)
@@ -197,15 +200,28 @@ def startplayin(port, baud, bits, signed, endian): # start playin' the stream to
 		
 		if cal_float_raw < cal_float * 16: # to combat erraneous buffering (i.e. paused stream)
 			cal_float = (cal_float_raw + (cal_float * 99))/100 # even out the estimate by using a simple averaging equation,
-			cal_bits = int(cal_float) # round the averaged float down to an int, so we can get a standalone bit value to use for the next buffered input.
+			cal_bits_new = int(cal_float) # round the averaged float down to an int, so we can get a standalone bit value to use for the next buffered input.
+			
+			if cal_bits_new - bytesize < startbits + stopbits: # an attempt to clean up negative calibration problem which is common with lossy serial ports at higher baud rates. Otherwise known as "How Twilight Sparkle got her Wings" or the "I've been up till five o clock programming without eating for 15 hours programming this workaround. Have some goddamned respect, man!"
+				wait_time_start = time.time()
+				cal_wait_time = ( (float(buffer_ms)*float(baud)) - (timepassed*float(baud)) ) / (float(baud) * 1000)
+				while wait_time_start + cal_wait_time > time.time():
+					pass
+				cal_bits = bytesize + startbits + stopbits
+			else: # Otherwise, amend the drop-bits feature
+				cal_bits = cal_bits_new
 		
-			if old_cal_bits != cal_bits: # We are changing our calibration. We need to log this to STDIN.
+			if old_cal_bits != cal_bits: # We are changing our calibration. We need to log this to STDOUT.
 				print("SER-PDM: Twilight Sparkle's Autocalibrate: play %s bits, then skip %s bits."  % (bytesize, cal_bits - bytesize)) # EXCUSE ME! I wonder who added this, damn pony vandals, I tell you, they always find a way to edit my code.
 				old_cal_bits = cal_bits
 			
 				if cal_bits - bytesize > bytesize and random.randint(0,5) == 4: # We are losing over half our marbles. There's no point in continuing. 
 					molasses() # Tell STDIN why we're giving up
 					raise Exception("Cannot keep up. We are too slow for the baud rate.", "%s bits dropped for every %s bits sent" % (cal_bits - bytesize, bytesize)) # Finally give up
+			
+			if old_cal_wait_time * 0.9 > cal_wait_time or cal_wait_time > old_cal_wait_time * 1.1: # And the other calibration method...
+				print("SER-PDM: Twilight Sparkle's Autocalibrate: wait for %s seconds between buffering (lossy serial port calibration)"  % (cal_wait_time))
+				old_cal_wait_time = cal_wait_time 
 		else:
 			print("SER-PDM: Twilight Sparkle's Autocalibrate: Ignoring unusually large delay.") # There she goes, ponies editing my code again... -_-
 		
@@ -215,7 +231,7 @@ def startplayin(port, baud, bits, signed, endian): # start playin' the stream to
 
 def molasses(): # For the enevitable case when our hardware or software is too slow, and can't keep up.
 	sys.stderr.write('ERROR: Cannot keep up with baud rate. Halting now!')
-	print """!
+	print("""
 
  -=+| MOLASSES ALERT! / SMOOZE ALERT! |+=-
 
@@ -232,10 +248,11 @@ Oh well, back to the drawing board.
 
 Try picking a slower baud rate next time, hmm-kay?
 
-And remember kids, SER-PDM does not use performance enhancing drugs! It is up to the end user to overclock their P.O.S 386-SX computer."""
+And remember kids, SER-PDM does not use performance enhancing drugs! It is up to the end user 
+to overclock their P.O.S 386-SX computer.""")
 # Geez, just when i thought I made it clear enough when I said "NO PONIES ALLOWED!!!!", for some reason they keep mysteriously showing up and fucking with my code!
-	
-def help(): # Just in case we have yet another 'Nice Trucker', '9/11', 'Boston Bombing', 'Christchurch earthquake', 'Japanese Tsunami', 'Bubonic Plague', 'Texas Wildfire', 'L-R Snackbar', 'sudo rm -rf /', ':(){ :|:& };:', 'Zika Virus', 'Ebola Epidemic', 'Changeling Invasion', 'Tainted Convolvulus', 'Titanic', 'Satanic Centaur', 'Lake Taupo eruption', 'Challenger', ... need I list more possibilities?
+
+def help(): # Just in case we have yet another 'Nice Trucker', '9/11', 'Boston Bombing', 'Christchurch earthquake', 'Japanese Tsunami', 'Bubonic Plague', 'Texas Wildfire', 'L-R Snackbar', 'sudo rm -rf /', ':(){ :|:& };:', 'Zika Virus', 'Ebola Epidemic', 'Changeling Invasion', 'Tainted Convolvulus', 'Titanic', 'Satanic Centaur', 'Lake Taupo eruption', 'Challenger', "Kaikoura Tsunami", "Portuguese Flame War", "Alaskan Ice Age", "Teutonic Plague", "Burrito Shake Boogie", "Radioactive Curry", "Masked Pony", "727 En Agua" ... need I list more possibilities?
 	print("""                    (*_*)
                      \|/
   =======================================
@@ -269,10 +286,13 @@ Use a bitrate of about a 10th of the baud rate.
 EXAMPLES:
 
  ffmpeg (or avconv):
-   ffmpeg -i <miscellaneous-sound-file> -f s8 -acodec pcm_s8 -ar 22400 -ac 1 - | ./usbsersnd.py <serialport> 230400 s8
+   ffmpeg -i <miscellaneous-sound-file> -f s8 -acodec pcm_s8 -ar 22400 -ac 1 - | ./serpdm.py 
+<serialport> 230400 s8
 
  VLC:
-   vlc <music file(s)/folder) --sout \"#transcode{acodec=s16le,,channels=1,samplerate=22400,afilter=compressor}:standard{access=file,mux=raw,dst=-}\" | ./usbsersnd.py <serialport> 230400 s16le
+   vlc <music file(s)/folder) --sout 
+\"#transcode{acodec=s16le,,channels=1,samplerate=22400,afilter=compressor}:standard{access=file,mux=raw,dst=-}\" 
+| ./serpdm.py <serialport> 230400 s16le
 
 Many other things are possible with this program, including ALSA, Pulseaudio, and Jack tunneling through STDIN (good luck with that ;D )
 FIFO tunneling is also possible!
@@ -291,7 +311,7 @@ EXAMPLE: %s /dev/ttyUSB0 230400""" % (sys.argv[0], sys.argv[0], sys.argv[0])) #C
 
 #INIT CODE
 
-print """ """
+print(""" """)
 # Just a little something to cleal up the text colours in the nano text editor. It's almost like Queen Chrysalis magically made my text glow green
 
 if len(sys.argv) >= 3 and sys.argv[1] != "--debug": #Run this program with error handling
@@ -339,11 +359,11 @@ If you can use a valid baud rate, it would be 20% cooler.
 
 If you're still stuck, try calling for --help, or debug this by using the '--debug' argument.""")
 		sys.stderr.write('ERROR: ' + repr(error))
-		print ' '
+		print(' ')
 	except Exception as error: #I just don't know what went wrong!
 		print("Some error has occured. If you're stuck, try: usbsersnd --help")
 		sys.stderr.write('ERROR: ' + repr(error))
-		print ' '
+		print(' ')
 
 if len(sys.argv) >= 4 and sys.argv[1] == "--debug": # Run this program in debug mode (no error handling)
 	print("WARNING: Queen Chrysalis mode! (--debug)") # HAY, I thought I said 'NO PONIES ALLOWED!'... Oh wait, she's a changeling... Never mind...
