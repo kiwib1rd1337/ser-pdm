@@ -199,29 +199,48 @@ def startplayin(port, baud, bits, signed, endian): # start playin' the stream to
 		cal_float_raw = timepassed / buffer_ms * cal_bits_orig   # Calculate a rough estimate of an optimal calibration setting. time-elapsed / buffer-time * original_cal_bits_estimate
 		
 		if cal_float_raw < cal_float * 16: # to combat erraneous buffering (i.e. paused stream)
-			cal_float = (cal_float_raw + (cal_float * 99))/100 # even out the estimate by using a simple averaging equation,
-			cal_bits_new = int(cal_float) # round the averaged float down to an int, so we can get a standalone bit value to use for the next buffered input.
+#			cal_float = (cal_float_raw + (cal_float * 99))/100 # even out the estimate by using a simple averaging equation,
+#			cal_bits_new = int(cal_float) # round the averaged float down to an int, so we can get a standalone bit value to use for the next buffered input.
 			
-			if cal_bits_new - bytesize < startbits + stopbits: # an attempt to clean up negative calibration problem which is common with lossy serial ports at higher baud rates. Otherwise known as "How Twilight Sparkle got her Wings" or the "I've been up till five o clock programming without eating for 15 hours programming this workaround. Have some goddamned respect, man!"
-				wait_time_start = time.time()
-				cal_wait_time = ( (float(buffer_ms)*float(baud)) - (timepassed*float(baud)) ) / (float(baud) * 1000)
-				while wait_time_start + cal_wait_time > time.time():
+			#if cal_bits_new - bytesize < startbits + stopbits: # an attempt to clean up negative calibration problem which is common with lossy serial ports at higher baud rates. Otherwise known as "How Twilight Sparkle got her Wings" or the "I've been up till five o clock programming without eating for 15 hours programming this workaround. Have some goddamned respect, man!"
+
+			#if True:
+			wait_time_start = time.time()
+			#cal_wait_time_new = ( (float(buffer_ms)*float(baud)) - (timepassed*float(baud)) ) / (float(baud) * 1000)
+                        cal_wait_time_new = ( float(buffer_ms) - timepassed ) * 1000
+			cal_wait_time = (cal_wait_time_new + old_cal_wait_time * 99) / 100
+			if cal_wait_time > 0:
+				while wait_time_start + cal_wait_time >= time.time():
 					pass
-				cal_bits = bytesize + startbits + stopbits
-			else: # Otherwise, amend the drop-bits feature
-				cal_bits = cal_bits_new
+			
+			if cal_wait_time < 0:
+				#print( int( (cal_wait_time/-1000) * (float(baud) / bits) * bufmultiplier) )
+				readind = sys.stdin.read( int( (cal_wait_time/-1000) * (float(baud) / bits) ) * bufmultiplier)
+
+			#cal_bits = bytesize + startbits + stopbits
+
+
+			#if cal_bits_new - bytesize > startbits + stopbits: # Otherwise, amend the drop-bits feature
+			#	cal_bits = cal_bits_new
 		
-			if old_cal_bits != cal_bits: # We are changing our calibration. We need to log this to STDOUT.
-				print("SER-PDM: Twilight Sparkle's Autocalibrate: play %s bits, then skip %s bits."  % (bytesize, cal_bits - bytesize)) # EXCUSE ME! I wonder who added this, damn pony vandals, I tell you, they always find a way to edit my code.
-				old_cal_bits = cal_bits
+#			if old_cal_bits != cal_bits: # We are changing our calibration. We need to log this to STDOUT.
+#				print("SER-PDM: Twilight Sparkle's Autocalibrate: play %s bits, then skip %s bits."  % (bytesize, cal_bits - bytesize)) # EXCUSE ME! I wonder who added this, damn pony vandals, I tell you, they always find a way to edit my code.
+#				old_cal_bits = cal_bits
 			
 				if cal_bits - bytesize > bytesize and random.randint(0,5) == 4: # We are losing over half our marbles. There's no point in continuing. 
 					molasses() # Tell STDIN why we're giving up
 					raise Exception("Cannot keep up. We are too slow for the baud rate.", "%s bits dropped for every %s bits sent" % (cal_bits - bytesize, bytesize)) # Finally give up
 			
-			if old_cal_wait_time * 0.9 > cal_wait_time or cal_wait_time > old_cal_wait_time * 1.1: # And the other calibration method...
-				print("SER-PDM: Twilight Sparkle's Autocalibrate: wait for %s seconds between buffering (lossy serial port calibration)"  % (cal_wait_time))
-				old_cal_wait_time = cal_wait_time 
+			if old_cal_wait_time * 0.9 > cal_wait_time or cal_wait_time > old_cal_wait_time * 1.1: # Fast calibration method...
+				if cal_wait_time > 0:
+					print("SER-PDM: Twilight Sparkle's Autocalibrate: wait for %s seconds between buffering (fast serial port calibration)"  % (cal_wait_time))
+					old_cal_wait_time = cal_wait_time 
+			
+			if old_cal_wait_time * 1.1 < cal_wait_time or cal_wait_time < old_cal_wait_time * 0.9: # Slow calibration method...
+                                if cal_wait_time > 0:
+                                        print("SER-PDM: Twilight Sparkle's Autocalibrate: dump %s of between buffering (slow serial port calibration)"  % (cal_wait_time))
+                                        old_cal_wait_time = cal_wait_time
+			
 		else:
 			print("SER-PDM: Twilight Sparkle's Autocalibrate: Ignoring unusually large delay.") # There she goes, ponies editing my code again... -_-
 		
@@ -286,12 +305,13 @@ Use a bitrate of about a 10th of the baud rate.
 EXAMPLES:
 
  ffmpeg (or avconv):
-   ffmpeg -i <miscellaneous-sound-file> -f s8 -acodec pcm_s8 -ar 22400 -ac 1 - | ./serpdm.py 
+   ffmpeg -i <miscellaneous-sound-file> -f s8 -acodec pcm_s8 -ar 230400 
+-ac 1 - | ./serpdm.py 
 <serialport> 230400 s8
 
  VLC:
    vlc <music file(s)/folder) --sout 
-\"#transcode{acodec=s16le,,channels=1,samplerate=22400,afilter=compressor}:standard{access=file,mux=raw,dst=-}\" 
+\"#transcode{acodec=s16le,,channels=1,samplerate=230400,afilter=compressor}:standard{access=file,mux=raw,dst=-}\" 
 | ./serpdm.py <serialport> 230400 s16le
 
 Many other things are possible with this program, including ALSA, Pulseaudio, and Jack tunneling through STDIN (good luck with that ;D )
@@ -418,3 +438,4 @@ except: # I just don't know what went wrong, but we need to call help anyway, so
 
 # If you read through all these comments (and figured out the easter egg), you must have WAAAY too much time on your hands. Now go play Darude - Sandstorm (or some vaporwave) through a serial port, you losers! HA HA HAAH!!!
 # The reason why I make so many comments, is because the compiler/interpreter continues not to give a shit about them.
+
